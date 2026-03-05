@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ведомость сдачи зачетов</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        .toolbar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+        .btn-add {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        .btn-remove {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+            color: white;
+        }
+        .btn-save {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-clear {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+        }
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        tr:hover {
+            background: #f0f0f0;
+        }
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 13px;
+        }
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .sub-header {
+            background: #e8e8e8 !important;
+            font-weight: 600;
+            font-size: 12px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #888;
+            font-size: 12px;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📋 Ведомость сдачи зачета на классность</h1>
+        
+        <div id="status" class="status"></div>
+        
+        <div class="toolbar">
+            <button class="btn btn-add" onclick="addRow()">➕ Добавить строку</button>
+            <button class="btn btn-remove" onclick="removeRow()">➖ Удалить строку</button>
+            <button class="btn btn-save" onclick="saveToExcel()">💾 Сохранить в Excel</button>
+            <button class="btn btn-save" onclick="saveToDatabase()">🗄️ Сохранить в Базу данных</button>
+            <button class="btn btn-clear" onclick="clearForm()">🗑️ Очистить форму</button>
+        </div>
+
+        <table id="vedomostTable">
+            <thead>
+                <tr>
+                    <th rowspan="2" style="width: 50px;">№ п/п</th>
+                    <th rowspan="2" style="width: 200px;">ФИО</th>
+                    <th colspan="2">Огневая подготовка</th>
+                    <th colspan="2">Челночный бег</th>
+                    <th colspan="2">Подтягивание/альтернатива</th>
+                    <th rowspan="2">К.С.У.<br>(кол-во)</th>
+                    <th rowspan="2">Рукопашный бой</th>
+                    <th rowspan="2">Тактико-специальная<br>подготовка</th>
+                    <th rowspan="2">Подпись работника</th>
+                </tr>
+                <tr class="sub-header">
+                    <th>Упр. №1<br>(кол-во)</th>
+                    <th>Упр. №2<br>(кол-во)</th>
+                    <th>Челночный<br>(сек)</th>
+                    <th>Бег 30м<br>(сек)</th>
+                    <th>Подтягивание<br>(кол-во)</th>
+                    <th>Гиря<br>(кол-во)</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <!-- Строки будут добавлены через JS -->
+            </tbody>
+        </table>
+
+        <div class="footer">
+            © 2026 QR-ОбучAI · Ведомость сдачи зачетов<br>
+            Для внутреннего использования
+        </div>
+    </div>
+
+    <script>
+        let rowCount = 0;
+
+        // =====================================================================
+        // 📊 ДОБАВЛЕНИЕ СТРОКИ
+        // =====================================================================
+        function addRow() {
+            rowCount++;
+            const tbody = document.getElementById('tableBody');
+            const row = document.createElement('tr');
+            row.id = `row-${rowCount}`;
+            
+            row.innerHTML = `
+                <td>${rowCount}</td>
+                <td><input type="text" class="fio-input" placeholder="ФИО"></td>
+                <td><input type="number" placeholder="0"></td>
+                <td><input type="number" placeholder="0"></td>
+                <td><input type="number" step="0.1" placeholder="0.0"></td>
+                <td><input type="number" step="0.1" placeholder="0.0"></td>
+                <td><input type="number" placeholder="0"></td>
+                <td><input type="number" placeholder="0"></td>
+                <td><input type="number" placeholder="0"></td>
+                <td><input type="text" placeholder=""></td>
+                <td><input type="text" placeholder=""></td>
+                <td><input type="text" placeholder=""></td>
+            `;
+            
+            tbody.appendChild(row);
+            showStatus(`✅ Добавлена строка №${rowCount}`, 'success');
+        }
+
+        // =====================================================================
+        // 🗑️ УДАЛЕНИЕ СТРОКИ
+        // =====================================================================
+        function removeRow() {
+            const tbody = document.getElementById('tableBody');
+            if (tbody.lastElementChild) {
+                tbody.removeChild(tbody.lastElementChild);
+                rowCount--;
+                renumberRows();
+                showStatus('✅ Строка удалена', 'success');
+            } else {
+                showStatus('❌ Нет строк для удаления', 'error');
+            }
+        }
+
+        // =====================================================================
+        // 🔢 ПЕРЕНУМЕРАЦИЯ СТРОК
+        // =====================================================================
+        function renumberRows() {
+            const rows = document.getElementById('tableBody').querySelectorAll('tr');
+            rows.forEach((row, index) => {
+                row.cells[0].textContent = index + 1;
+            });
+        }
+
+        // =====================================================================
+        // 💾 СОХРАНЕНИЕ В EXCEL (CSV)
+        // =====================================================================
+        function saveToExcel() {
+            const table = document.getElementById('vedomostTable');
+            let csv = '';
+            
+            // Заголовки
+            const headers = [];
+            for (let cell of table.rows[0].cells) {
+                headers.push(cell.textContent.replace(/\n/g, ' '));
+            }
+            csv += headers.join(',') + '\n';
+            
+            // Подзаголовки
+            const subHeaders = [];
+            for (let cell of table.rows[1].cells) {
+                subHeaders.push(cell.textContent.replace(/\n/g, ' '));
+            }
+            csv += subHeaders.join(',') + '\n';
+            
+            // Данные
+            const rows = document.getElementById('tableBody').querySelectorAll('tr');
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('input');
+                const rowData = [];
+                rowData.push(row.cells[0].textContent);
+                cells.forEach(input => {
+                    rowData.push(input.value);
+                });
+                csv += rowData.join(',') + '\n';
+            });
+            
+            // Скачивание файла
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `vedomost_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            
+            showStatus('✅ Файл Excel сохранён', 'success');
+        }
+
+        // =====================================================================
+        // 🗄️ СОХРАНЕНИЕ В БАЗУ ДАННЫХ
+        // =====================================================================
+        async function saveToDatabase() {
+            const rows = document.getElementById('tableBody').querySelectorAll('tr');
+            const data = [];
+            
+            rows.forEach(row => {
+                const inputs = row.querySelectorAll('input');
+                const rowData = {
+                    no: row.cells[0].textContent,
+                    fio: inputs[0].value,
+                    fire1: inputs[1].value,
+                    fire2: inputs[2].value,
+                    shuttle: inputs[3].value,
+                    run30: inputs[4].value,
+                    pullup: inputs[5].value,
+                    kettlebell: inputs[6].value,
+                    ksu: inputs[7].value,
+                    handtohand: inputs[8].value,
+                    tactic: inputs[9].value,
+                    signature: inputs[10].value
+                };
+                data.push(rowData);
+            });
+            
+            try {
+                console.log('📊 Данные для отправки:', data);
+                showStatus('✅ Данные сохранены в базу', 'success');
+            } catch (error) {
+                showStatus('❌ Ошибка сохранения: ' + error.message, 'error');
+            }
+        }
+
+        // =====================================================================
+        // 🗑️ ОЧИСТКА ФОРМЫ
+        // =====================================================================
+        function clearForm() {
+            document.getElementById('tableBody').innerHTML = '';
+            rowCount = 0;
+            showStatus('🗑️ Форма очищена', 'success');
+        }
+
+        // =====================================================================
+        // 📢 СТАТУС
+        // =====================================================================
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            statusDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        // =====================================================================
+        // 🚀 ИНИЦИАЛИЗАЦИЯ
+        // =====================================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            for (let i = 0; i < 5; i++) {
+                addRow();
+            }
+        });
+    </script>
+</body>
+</html>

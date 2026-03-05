@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qr-ОбучAI · Таблицы</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        .header p {
+            color: #666;
+            font-size: 16px;
+        }
+        .gosb-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .gosb-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+        .gosb-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+        .gosb-card h3 {
+            color: #667eea;
+            font-size: 18px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .gosb-card .icon {
+            font-size: 24px;
+        }
+        .gosb-card .links {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .gosb-card .links a {
+            display: block;
+            padding: 10px 15px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #333;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        .gosb-card .links a:hover {
+            background: #667eea;
+            color: white;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            position: relative;
+        }
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 30px;
+            cursor: pointer;
+            color: #999;
+        }
+        .modal-close:hover {
+            color: #333;
+        }
+        .modal h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        .modal .links {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .modal .links a {
+            display: block;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+        .modal .links a:hover {
+            transform: scale(1.02);
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            color: white;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏦 Qr-ОбучAI</h1>
+            <p>Панель управления таблицами — быстрый доступ ко всем ГОСБ</p>
+        </div>
+
+        <div class="gosb-grid">
+            <div class="gosb-card" onclick="openModal('ekb')">
+                <h3><span class="icon">🏢</span> Аппарат Банка Екатеринбург</h3>
+                <div class="links">
+                    <a href="https://docs.google.com/spreadsheets/d/1BUjdLdJJeGHxnY1ZQ-XD0wbX0HlcZUCffIGF2gG56No/edit" target="_blank">📋 Основная с местоположением</a>
+                    <a href="https://docs.google.com/spreadsheets/d/1ODZ7fu47zKnHy5XkHAvfkICXYy_1AuwHcI8DeSy6ooI/edit" target="_blank">📊 Отчет в УЦ</a>
+                    <a href="index.html" target="_blank">🌐 Форма регистрации</a>
+                </div>
+            </div>
+
+            <div class="gosb-card" onclick="openModal('tyumen')">
+                <h3><span class="icon">🏙️</span> Тюменский ГОСБ Тюмень</h3>
+                <div class="links">
+                    <a href="https://docs.google.com/spreadsheets/d/1pF14w-l3Ij4_C4yS7WjaC52c2BiZwz4o6uOKsNcwZco/edit" target="_blank">📋 Основная с местоположением</a>
+                    <a href="https://docs.google.com/spreadsheets/d/1rRLKl_7AF13oTkNl0zjdBMR4KlnsggjmxwPunx3hzuM/edit" target="_blank">📊 Отчет в УЦ</a>
+                    <a href="index.html" target="_blank">🌐 Форма регистрации</a>
+                </div>
+            </div>
+
+            <div class="gosb-card" onclick="openModal('chel')">
+                <h3><span class="icon">🌆</span> Челябинский ГОСБ Челябинск</h3>
+                <div class="links">
+                    <a href="https://docs.google.com/spreadsheets/d/13UWfwS25n9HihUntZQW6rIvwy-Tp2odnY41AaZ_i_Zc/edit" target="_blank">📋 Основная с местоположением</a>
+                    <a href="https://docs.google.com/spreadsheets/d/1aSu1aCWZQ8RxUTV7_iusHRJ3h-prvKzLfU8lXAWYTJg/edit" target="_blank">📊 Отчет в УЦ</a>
+                    <a href="index.html" target="_blank">🌐 Форма регистрации</a>
+                </div>
+            </div>
+
+            <div class="gosb-card" onclick="openModal('ugra')">
+                <h3><span class="icon">🏔</span> Югорский ГОСБ Ханты-Мансийск</h3>
+                <div class="links">
+                    <a href="https://docs.google.com/spreadsheets/d/1de8M-j_1fNBGZnIUliYtvyhdp7rjM-AbkpZPMUEVCuI/edit" target="_blank">📋 Основная с местоположением</a>
+                    <a href="https://docs.google.com/spreadsheets/d/13OuKRSO4jsNPAk5DkGVyhziz766F1IpgnYc7KIEMh7E/edit" target="_blank">📊 Отчет в УЦ</a>
+                    <a href="index.html" target="_blank">🌐 Форма регистрации</a>
+                </div>
+            </div>
+
+            <div class="gosb-card" onclick="openModal('bash')">
+                <h3><span class="icon">🌳</span> Башкирский ГОСБ Уфа</h3>
+                <div class="links">
+                    <a href="https://docs.google.com/spreadsheets/d/1I12HG4XZ7i-J1YstnyOFqgfqIz7Kf84hzD6PSQRKeeM/edit" target="_blank">📋 Основная с местоположением</a>
+                    <a href="https://docs.google.com/spreadsheets/d/1fvJkTxcRrgJ8I0P22BlrjRPCP4HGnpJjd2ejyiL-a7E/edit" target="_blank">📊 Отчет в УЦ</a>
+                    <a href="index.html" target="_blank">🌐 Форма регистрации</a>
+                </div>
+            </div>
+
+            <div class="gosb-card" onclick="openModal('kurgan')">
+                <h3><span class="icon">🌊</span> Курганский ГОСБ Курган</h3>
+                <div class="links">
+                    <a href="https://docs.google.com/spreadsheets/d/1FHGnXPx8_pJ7CYP8IYfzQWgNr84ivf_DNqPtimvNT-c/edit" target="_blank">📋 Основная с местоположением</a>
+                    <a href="https://docs.google.com/spreadsheets/d/1gAsFycltFWKjjc2ODyhwEvlZjjQ6BlMPLcqHJoYRCwc/edit" target="_blank">📊 Отчет в УЦ</a>
+                    <a href="index.html" target="_blank">🌐 Форма регистрации</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            © 2026 QR-ОбучAI · AI-панель · защищённый доступ
+        </div>
+    </div>
+
+    <!-- Модальное окно -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal()">&times;</span>
+            <h2 id="modal-title">🏦 ГОСБ</h2>
+            <p>Выберите нужный ресурс:</p>
+            <div class="links" id="modal-links">
+                <!-- Ссылки будут добавлены через JS -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const GOSB_DATA = {
+            'ekb': {
+                name: 'Аппарат Банка Екатеринбург',
+                icon: '🏢',
+                registration: 'https://docs.google.com/spreadsheets/d/1BUjdLdJJeGHxnY1ZQ-XD0wbX0HlcZUCffIGF2gG56No/edit',
+                report: 'https://docs.google.com/spreadsheets/d/1ODZ7fu47zKnHy5XkHAvfkICXYy_1AuwHcI8DeSy6ooI/edit',
+                form: 'index.html'
+            },
+            'tyumen': {
+                name: 'Тюменский ГОСБ Тюмень',
+                icon: '🏙️',
+                registration: 'https://docs.google.com/spreadsheets/d/1pF14w-l3Ij4_C4yS7WjaC52c2BiZwz4o6uOKsNcwZco/edit',
+                report: 'https://docs.google.com/spreadsheets/d/1rRLKl_7AF13oTkNl0zjdBMR4KlnsggjmxwPunx3hzuM/edit',
+                form: 'index.html'
+            },
+            'chel': {
+                name: 'Челябинский ГОСБ Челябинск',
+                icon: '🌆',
+                registration: 'https://docs.google.com/spreadsheets/d/13UWfwS25n9HihUntZQW6rIvwy-Tp2odnY41AaZ_i_Zc/edit',
+                report: 'https://docs.google.com/spreadsheets/d/1aSu1aCWZQ8RxUTV7_iusHRJ3h-prvKzLfU8lXAWYTJg/edit',
+                form: 'index.html'
+            },
+            'ugra': {
+                name: 'Югорский ГОСБ Ханты-Мансийск',
+                icon: '🏔',
+                registration: 'https://docs.google.com/spreadsheets/d/1de8M-j_1fNBGZnIUliYtvyhdp7rjM-AbkpZPMUEVCuI/edit',
+                report: 'https://docs.google.com/spreadsheets/d/13OuKRSO4jsNPAk5DkGVyhziz766F1IpgnYc7KIEMh7E/edit',
+                form: 'index.html'
+            },
+            'bash': {
+                name: 'Башкирский ГОСБ Уфа',
+                icon: '🌳',
+                registration: 'https://docs.google.com/spreadsheets/d/1I12HG4XZ7i-J1YstnyOFqgfqIz7Kf84hzD6PSQRKeeM/edit',
+                report: 'https://docs.google.com/spreadsheets/d/1fvJkTxcRrgJ8I0P22BlrjRPCP4HGnpJjd2ejyiL-a7E/edit',
+                form: 'index.html'
+            },
+            'kurgan': {
+                name: 'Курганский ГОСБ Курган',
+                icon: '🌊',
+                registration: 'https://docs.google.com/spreadsheets/d/1FHGnXPx8_pJ7CYP8IYfzQWgNr84ivf_DNqPtimvNT-c/edit',
+                report: 'https://docs.google.com/spreadsheets/d/1gAsFycltFWKjjc2ODyhwEvlZjjQ6BlMPLcqHJoYRCwc/edit',
+                form: 'index.html'
+            }
+        };
+
+        function openModal(gosbId) {
+            const data = GOSB_DATA[gosbId];
+            if (!data) return;
+
+            document.getElementById('modal-title').textContent = `${data.icon} ${data.name}`;
+            
+            const linksHtml = `
+                <a href="${data.registration}" target="_blank">📋 Основная с местоположением</a>
+                <a href="${data.report}" target="_blank">📊 Отчет в УЦ</a>
+                <a href="${data.form}" target="_blank">🌐 Форма регистрации</a>
+            `;
+            
+            document.getElementById('modal-links').innerHTML = linksHtml;
+            document.getElementById('modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('modal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
