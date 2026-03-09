@@ -1,8 +1,9 @@
 """
-QR-ОбучAI — FastAPI Backend (Упрощённая версия)
+QR-ОбучAI — FastAPI Backend
+С записью в Google Sheets
 """
 
-from fastapi import FastAPI, BackgroundTasks
+from fastapi import FastAPI, BackgroundTasks, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, List
@@ -10,24 +11,23 @@ from datetime import datetime
 import asyncio
 import aiohttp
 import os
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
 
 from config import (
     BOT_TOKEN, ADMIN_CHAT_ID,
     DEFAULT_KIC_LIST,
     NOMINATIM_URL, NOMINATIM_USER_AGENT,
+    SHEET_ID_REGISTRATIONS,
+    GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_PRIVATE_KEY, GOOGLE_SCOPES,
     validate_config
 )
 
 # =============================================================================
 # 🚀 ПРИЛОЖЕНИЕ
 # =============================================================================
-app = FastAPI(
-    title="QR-ОбучAI API",
-    description="Система регистрации инкассаторов на обучение",
-    version="1.0.0"
-)
+app = FastAPI(title="QR-ОбучAI API")
 
-# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -47,10 +47,63 @@ class RegistrationData(BaseModel):
     longitude: Optional[float] = None
 
 # =============================================================================
+# 🔧 GOOGLE SHEETS
+# =============================================================================
+def get_sheets_service():
+    """Создаёт клиент Google Sheets"""
+    try:
+        if not GOOGLE_PRIVATE_KEY or not GOOGLE_SERVICE_ACCOUNT_EMAIL:
+            print("⚠️ Google credentials not configured")
+            return None
+            
+        # Исправляем формат ключа
+        private_key = GOOGLE_PRIVATE_KEY
+        if '\\n' in private_key:
+            private_key = private_key.replace('\\n', '\n')
+        
+        credentials_info = {
+            "type": "service_account",
+            "project_id": "qr-obuchai",
+            "private_key_id": "key123",
+            "private_key": private_key,
+            "client_email": GOOGLE_SERVICE_ACCOUNT_EMAIL,
+            "client_id": "123456",
+            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+            "token_uri": "https://oauth2.googleapis.com/token",
+        }
+        
+        credentials = service_account.Credentials.from_service_account_info(
+            credentials_info, scopes=GOOGLE_SCOPES
+        )
+        
+        service = build('sheets', 'v4', credentials=credentials)
+        print("✅ Google Sheets client created")
+        return service
+    except Exception as e:
+        print(f"❌ Error creating Sheets client: {e}")
+        return None
+
+
+def append_to_sheet(service, spreadsheet_id, range_name, values):
+    """Добавляет строку в таблицу"""
+    try:
+        body = {'values': [values]}
+        result = service.spreadsheets().values().append(
+            spreadsheetId=spreadsheet_id,
+            range=range_name,
+            valueInputOption='RAW',
+            body=body
+        ).execute()
+        print(f"✅ Appended {result.get('updates').get('updatedCells')} cells")
+        return result
+    except Exception as e:
+        print(f"❌ Error appending to sheet: {e}")
+        return None
+
+# =============================================================================
 # 🔧 ФУНКЦИИ
 # =============================================================================
 async def reverse_geocode(lat: float, lng: float) -> str:
-    """Обратный геокодинг"""
     try:
         lat_fixed = f"{lat:.5f}"
         lng_fixed = f"{lng:.5f}"
@@ -60,7 +113,7 @@ async def reverse_geocode(lat: float, lng: float) -> str:
             async with session.get(url, headers={"User-Agent": NOMINATIM_USER_AGENT}, timeout=10) as resp:
                 if resp.status == 200:
                     data = await resp.json()
-                    if data and "address" in data:
+                    if data and "address" in 
                         addr = data["address"]
                         parts = []
                         if addr.get("road"):
@@ -80,12 +133,11 @@ async def reverse_geocode(lat: float, lng: float) -> str:
                 
                 return f"шир. {lat_fixed} • долг. {lng_fixed}"
     except Exception as e:
-        print(f"⚠️ Ошибка геокодинга: {e}")
+        print(f"⚠️ Geocode error: {e}")
         return f"шир. {lat:.5f} • долг. {lng:.5f}"
 
 
 async def send_telegram_message(chat_id: str, text: str):
-    """Отправка в Telegram"""
     try:
         url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
         payload = {"chat_id": chat_id, "text": text, "parse_mode": "HTML"}
@@ -96,8 +148,7 @@ async def send_telegram_message(chat_id: str, text: str):
                 if not result.get("ok"):
                     print(f"❌ Telegram: {result.get('description')}")
     except Exception as e:
-        print(f"⚠️ Ошибка Telegram: {e}")
-
+        print(f"⚠️ Telegram error: {e}")
 
 # =============================================================================
 # 🌐 API
@@ -119,8 +170,8 @@ async def get_kics():
 
 @app.post("/api/register")
 async def register_visit(data: RegistrationData, background_tasks: BackgroundTasks):
-    """Регистрация работника"""
-    print(f"📝 Регистрация: {data.fio}, {data.kic}, {data.purpose}")
+    """Регистрация с записью в Google Sheets"""
+    print(f"📝 Registration: {data.fio}, {data.kic}, {data.purpose}")
     
     # Геокодинг
     address = "Адрес не определён"
@@ -129,7 +180,38 @@ async def register_visit(data: RegistrationData, background_tasks: BackgroundTas
     
     timestamp = datetime.now().strftime("%d.%m.%Y %H:%M:%S")
     
-    # Telegram уведомление
+    # 📊 Запись в Google Sheets
+    sheets_service = get_sheets_service()
+    
+    if sheets_service and SHEET_ID_REGISTRATIONS:
+        try:
+            # Структура: Отметка времени | ФИО | КИЦ | Цель визита | Адрес | Занесение в акты
+            values = [
+                timestamp,           # A
+                data.fio,            # B
+                data.kic,            # C
+                data.purpose,        # D
+                address,             # E
+                ""                   # F
+            ]
+            
+            result = append_to_sheet(
+                sheets_service,
+                SHEET_ID_REGISTRATIONS,
+                "Лист1!A:F",
+                values
+            )
+            
+            if result:
+                print(f"✅ Data written to sheet: {data.fio}")
+            else:
+                print("⚠️ Failed to write to sheet")
+        except Exception as e:
+            print(f"❌ Sheets error: {e}")
+    else:
+        print("⚠️ Google Sheets not configured")
+    
+    # Telegram
     if ADMIN_CHAT_ID and BOT_TOKEN:
         message = (
             f"👮 <b>Новая регистрация</b>\n\n"
@@ -158,7 +240,7 @@ async def cron_daily_report():
 
 if __name__ == "__main__":
     import uvicorn
-    print("🔍 Проверка конфигурации...")
+    print("🔍 Checking config...")
     if validate_config():
-        print("✅ Настройки корректны")
+        print("✅ Config OK")
     uvicorn.run(app, host="0.0.0.0", port=8000)
