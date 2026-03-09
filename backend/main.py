@@ -105,7 +105,7 @@ async def register_visit(data: RegistrationData, background_tasks: BackgroundTas
             body = {'values': [values]}
             result = sheets_service.spreadsheets().values().append(
                 spreadsheetId=sheet_id,
-                range="Лист1!A:F",
+                range="Регистрации!A:F",
                 valueInputOption='RAW',
                 body=body
             ).execute()
