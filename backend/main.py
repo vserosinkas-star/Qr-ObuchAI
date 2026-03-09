@@ -2,7 +2,7 @@ from fastapi import FastAPI, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
@@ -28,6 +28,10 @@ DEFAULT_KIC_LIST = [
     "Каменск-Уральский", "Ирбит", "Серов", "Камышлов",
 ]
 
+def get_yekaterinburg_time():
+    """Возвращает текущее время Екатеринбурга (UTC+5)"""
+    return datetime.utcnow() + timedelta(hours=5)
+
 def get_sheets_service():
     """Создаёт клиент Google Sheets"""
     try:
@@ -38,7 +42,6 @@ def get_sheets_service():
             print("⚠️ Google credentials not found")
             return None
         
-        # Исправляем формат ключа
         if '\\n' in private_key:
             private_key = private_key.replace('\\n', '\n')
         
@@ -70,16 +73,16 @@ async def root():
 
 @app.get("/api/health")
 async def health_check():
-    return {"status": "ok", "timestamp": datetime.now().isoformat()}
+    return {"status": "ok", "timestamp": get_yekaterinburg_time().strftime("%d.%m.%Y %H:%M:%S")}
 
 @app.get("/api/kic-list")
 async def get_kics():
     return {"cities": DEFAULT_KIC_LIST}
 
 @app.post("/api/register")
-async def register_visit(data: RegistrationData, background_tasks: BackgroundTasks):
+async def register_visit( RegistrationData, background_tasks: BackgroundTasks):
     """Регистрация с записью в Google Sheets"""
-    timestamp = datetime.now().strftime("%d.%m.%Y %H:%M:%S")
+    timestamp = get_yekaterinburg_time().strftime("%d.%m.%Y %H:%M:%S")
     
     address = "Адрес не определён"
     if data.latitude and data.longitude:
@@ -89,7 +92,7 @@ async def register_visit(data: RegistrationData, background_tasks: BackgroundTas
     
     # Запись в Google Sheets
     sheets_service = get_sheets_service()
-    sheet_id = os.environ.get("SHEET_ID_REGISTRATIONS", "1BUjdLdJJeGHxnY1ZQ-XD0wbX0HlcZUCffIGF2gG56No")
+    sheet_id = os.environ.get("GOOGLE_SHEET_ID_REGISTRATIONS", "1BUjdLdJJeGHxnY1ZQ-XD0wbX0HlcZUCffIGF2gG56No")
     
     if sheets_service:
         try:
