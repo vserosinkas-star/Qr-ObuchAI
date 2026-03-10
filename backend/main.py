@@ -1,4 +1,4 @@
-from fastapi import FastAPI, BackgroundTasks
+from fastapi import FastAPI, BackgroundTasks, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, List
@@ -80,53 +80,62 @@ async def get_kics():
     return {"cities": DEFAULT_KIC_LIST}
 
 @app.post("/api/register")
-async def register_visit( RegistrationData, background_tasks: BackgroundTasks):
+async def register_visit(data: RegistrationData, background_tasks: BackgroundTasks):
     """Регистрация с записью в Google Sheets"""
-    timestamp = get_yekaterinburg_time().strftime("%d.%m.%Y %H:%M:%S")
+    print(f"📝 Получены данные: {data}")
     
-    address = "Адрес не определён"
-    if data.latitude and data.longitude:
-        address = f"шир. {data.latitude:.5f} • долг. {data.longitude:.5f}"
-    
-    print(f"📝 Registration: {data.fio}, {data.kic}, {data.purpose}")
-    
-    # Запись в Google Sheets
-    sheets_service = get_sheets_service()
-    sheet_id = os.environ.get("GOOGLE_SHEET_ID_REGISTRATIONS", "1BUjdLdJJeGHxnY1ZQ-XD0wbX0HlcZUCffIGF2gG56No")
-    
-    if sheets_service:
-        try:
-            values = [
-                timestamp,
-                data.fio,
-                data.kic,
-                data.purpose,
-                address,
-                ""
-            ]
-            
-            body = {'values': [values]}
-            result = sheets_service.spreadsheets().values().append(
-                spreadsheetId=sheet_id,
-                range="Регистрации!A:F",
-                valueInputOption='RAW',
-                body=body
-            ).execute()
-            
-            print(f"✅ Appended {result.get('updates').get('updatedCells')} cells to Google Sheets")
-        except Exception as e:
-            print(f"❌ Error writing to Google Sheets: {str(e)}")
-    else:
-        print("⚠️ Google Sheets service not available")
-    
-    return {
-        "status": "success",
-        "address": address,
-        "timestamp": timestamp,
-        "fio": data.fio,
-        "purpose": data.purpose,
-        "message": "Регистрация успешна"
-    }
+    try:
+        timestamp = get_yekaterinburg_time().strftime("%d.%m.%Y %H:%M:%S")
+        
+        # Геокодинг
+        address = "Адрес не определён"
+        if data.latitude is not None and data.longitude is not None:
+            address = f"шир. {data.latitude:.5f} • долг. {data.longitude:.5f}"
+        else:
+            address = "Координаты не получены"
+        
+        print(f"📝 Registration: {data.fio}, {data.kic}, {data.purpose}")
+        
+        # Запись в Google Sheets
+        sheets_service = get_sheets_service()
+        sheet_id = os.environ.get("GOOGLE_SHEET_ID_REGISTRATIONS", "1BUjdLdJJeGHxnY1ZQ-XD0wbX0HlcZUCffIGF2gG56No")
+        
+        if sheets_service:
+            try:
+                values = [
+                    timestamp,
+                    data.fio,
+                    data.kic,
+                    data.purpose,
+                    address,
+                    ""
+                ]
+                
+                body = {'values': [values]}
+                result = sheets_service.spreadsheets().values().append(
+                    spreadsheetId=sheet_id,
+                    range="Регистрации!A:F",
+                    valueInputOption='RAW',
+                    body=body
+                ).execute()
+                
+                print(f"✅ Appended {result.get('updates').get('updatedCells')} cells to Google Sheets")
+            except Exception as e:
+                print(f"❌ Error writing to Google Sheets: {str(e)}")
+        else:
+            print("⚠️ Google Sheets service not available")
+        
+        return {
+            "status": "success",
+            "address": address,
+            "timestamp": timestamp,
+            "fio": data.fio,
+            "purpose": data.purpose,
+            "message": "Регистрация успешна"
+        }
+    except Exception as e:
+        print(f"❌ Unexpected error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Внутренняя ошибка: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn
