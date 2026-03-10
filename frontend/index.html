@@ -5,11 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Регистрация в учебном центре</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -27,21 +23,9 @@
             max-width: 500px;
             width: 100%;
         }
-        h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 30px;
-            font-size: 24px;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            color: #555;
-            font-weight: 600;
-        }
+        h1 { text-align: center; color: #333; margin-bottom: 30px; font-size: 24px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; color: #555; font-weight: 600; }
         input, select {
             width: 100%;
             padding: 12px 15px;
@@ -50,10 +34,7 @@
             font-size: 16px;
             transition: border-color 0.3s;
         }
-        input:focus, select:focus {
-            outline: none;
-            border-color: #667eea;
-        }
+        input:focus, select:focus { outline: none; border-color: #667eea; }
         button {
             width: 100%;
             padding: 15px;
@@ -66,15 +47,8 @@
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
         }
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
-        }
-        button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
+        button:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(102,126,234,0.4); }
+        button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
         .status {
             margin-top: 20px;
             padding: 15px;
@@ -82,22 +56,9 @@
             text-align: center;
             display: none;
         }
-        .status.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        .status.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        .footer {
-            text-align: center;
-            margin-top: 30px;
-            color: #888;
-            font-size: 12px;
-        }
+        .status.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .status.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .footer { text-align: center; margin-top: 30px; color: #888; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -109,14 +70,12 @@
                 <label for="fio">ФИО полностью *</label>
                 <input type="text" id="fio" name="fio" placeholder="Пример: Иванов Иван Иванович" required>
             </div>
-            
             <div class="form-group">
                 <label for="kic">КИЦ (город) *</label>
                 <select id="kic" name="kic" required>
                     <option value="">Загрузка списка КИЦ...</option>
                 </select>
             </div>
-            
             <div class="form-group">
                 <label for="purpose">Цель визита *</label>
                 <select id="purpose" name="purpose" required>
@@ -127,16 +86,13 @@
                     <option value="Контраварийная подготовка">Контраварийная подготовка</option>
                 </select>
             </div>
-            
             <button type="submit" id="submitBtn">📝 Зарегистрироваться</button>
         </form>
         
         <div id="status" class="status"></div>
         
         <div class="footer">
-            © 2026 QR-ОбучAI<br>
-            Для регистрации в учебном центре<br>
-            Права принадлежат разработчику
+            © 2026 QR-ОбучAI<br>Для регистрации в учебном центре
         </div>
     </div>
 
@@ -144,7 +100,6 @@
         let userLatitude = null;
         let userLongitude = null;
 
-        // 🌍 Получение геолокации
         function getLocation() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
@@ -153,15 +108,12 @@
                         userLongitude = position.coords.longitude;
                         console.log('📍 Геолокация:', userLatitude, userLongitude);
                     },
-                    (error) => {
-                        console.warn('⚠️ Геолокация недоступна:', error.message);
-                    },
+                    (error) => console.warn('⚠️ Геолокация недоступна:', error.message),
                     { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
                 );
             }
         }
 
-        // 📊 Загрузка списка КИЦ
         async function loadKicList() {
             const select = document.getElementById('kic');
             try {
@@ -177,24 +129,16 @@
                     });
                     return;
                 }
-            } catch (e) {
-                console.warn('⚠️ API недоступен, используем список по умолчанию');
-            }
+            } catch (e) { console.warn('⚠️ API недоступен, используем список по умолчанию'); }
             
-            const defaultCities = [
-                'Екатеринбург', 'Нижний Тагил', 'Асбест', 'Первоуральск',
-                'Каменск-Уральский', 'Ирбит', 'Серов', 'Камышлов'
-            ];
+            const defaultCities = ['Екатеринбург','Нижний Тагил','Асбест','Первоуральск','Каменск-Уральский','Ирбит','Серов','Камышлов'];
             select.innerHTML = '<option value="">Выберите город из списка</option>';
             defaultCities.forEach(city => {
                 const option = document.createElement('option');
-                option.value = city;
-                option.textContent = city;
-                select.appendChild(option);
+                option.value = city; option.textContent = city; select.appendChild(option);
             });
         }
 
-        // 📝 Отправка формы
         async function submitForm(event) {
             event.preventDefault();
             
@@ -218,31 +162,34 @@
                 const response = await fetch('/api/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        fio: fio,
-                        kic: kic,
-                        purpose: purpose,
-                        latitude: userLatitude,
-                        longitude: userLongitude
-                    })
+                    body: JSON.stringify({ fio, kic, purpose, latitude: userLatitude, longitude: userLongitude })
                 });
                 
-                const result = await response.json();
+                // 🔍 Проверяем тип ответа
+                const contentType = response.headers.get('content-type');
+                let result;
                 
-                if (response.ok && result.status === 'success') {
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    // Сервер вернул не-JSON (например, ошибку 500 с HTML)
+                    const text = await response.text();
+                    console.error('Server returned non-JSON:', text.substring(0, 200));
+                    throw new Error('Сервер вернул ошибку. Проверьте логи Vercel.');
+                }
+                
+                if (response.ok && result && result.status === 'success') {
                     statusDiv.className = 'status success';
-                    statusDiv.innerHTML = `
-                        ✅ <b>Регистрация успешна!</b><br>
-                        📍 Адрес: ${result.address}<br>
-                        ⏰ Время: ${result.timestamp}
-                    `;
+                    statusDiv.innerHTML = `✅ <b>Регистрация успешна!</b><br>📍 Адрес: ${result.address || 'Н/Д'}<br>⏰ Время: ${result.timestamp || 'Н/Д'}`;
                     document.getElementById('registrationForm').reset();
                 } else {
-                    throw new Error(result.detail || result.message || 'Ошибка регистрации');
+                    const errorMsg = result?.detail || result?.message || (typeof result === 'string' ? result : 'Ошибка регистрации');
+                    throw new Error(errorMsg);
                 }
             } catch (error) {
+                console.error('Registration error:', error);
                 statusDiv.className = 'status error';
-                statusDiv.textContent = `❌ ${error.message}`;
+                statusDiv.textContent = `❌ ${error.message || 'Неизвестная ошибка'}`;
             } finally {
                 statusDiv.style.display = 'block';
                 submitBtn.disabled = false;
@@ -250,7 +197,6 @@
             }
         }
 
-        // 🚀 Инициализация
         document.addEventListener('DOMContentLoaded', () => {
             getLocation();
             loadKicList();
