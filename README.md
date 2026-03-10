@@ -28,9 +28,3 @@
 | kurgan | Курган |
 
 ## 🚀 Быстрый старт
-
-### 1. Клонирование репозитория
-
-```bash
-git clone https://github.com/vserosinkas-star/Qr-ObuchAI.git
-cd Qr-ObuchAI
