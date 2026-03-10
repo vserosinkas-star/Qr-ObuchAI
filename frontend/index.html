@@ -1,207 +1,142 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Регистрация в учебном центре</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        .container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            padding: 40px;
-            max-width: 500px;
-            width: 100%;
-        }
-        h1 { text-align: center; color: #333; margin-bottom: 30px; font-size: 24px; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; color: #555; font-weight: 600; }
-        input, select {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-        }
-        input:focus, select:focus { outline: none; border-color: #667eea; }
-        button {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        button:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(102,126,234,0.4); }
-        button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-        .status {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-            display: none;
-        }
-        .status.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .status.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .footer { text-align: center; margin-top: 30px; color: #888; font-size: 12px; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>🎓 Регистрация в учебном центре</h1>
+from fastapi import FastAPI, BackgroundTasks, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from typing import Optional, List
+from datetime import datetime, timedelta
+import os
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+
+app = FastAPI(title="QR-ОбучAI API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+class RegistrationData(BaseModel):
+    fio: str
+    kic: str
+    purpose: str
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+
+DEFAULT_KIC_LIST = [
+    "Екатеринбург", "Нижний Тагил", "Асбест", "Первоуральск",
+    "Каменск-Уральский", "Ирбит", "Серов", "Камышлов",
+]
+
+def get_yekaterinburg_time():
+    """Возвращает текущее время Екатеринбурга (UTC+5)"""
+    return datetime.utcnow() + timedelta(hours=5)
+
+def get_sheets_service():
+    """Создаёт клиент Google Sheets"""
+    try:
+        private_key = os.environ.get("GOOGLE_PRIVATE_KEY", "")
+        client_email = os.environ.get("GOOGLE_SERVICE_ACCOUNT_EMAIL", "")
         
-        <form id="registrationForm">
-            <div class="form-group">
-                <label for="fio">ФИО полностью *</label>
-                <input type="text" id="fio" name="fio" placeholder="Пример: Иванов Иван Иванович" required>
-            </div>
-            <div class="form-group">
-                <label for="kic">КИЦ (город) *</label>
-                <select id="kic" name="kic" required>
-                    <option value="">Загрузка списка КИЦ...</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="purpose">Цель визита *</label>
-                <select id="purpose" name="purpose" required>
-                    <option value="">Выберите цель визита</option>
-                    <option value="Модуль 1">Модуль 1</option>
-                    <option value="Модуль 2">Модуль 2</option>
-                    <option value="ЕПП">ЕПП</option>
-                    <option value="Контраварийная подготовка">Контраварийная подготовка</option>
-                </select>
-            </div>
-            <button type="submit" id="submitBtn">📝 Зарегистрироваться</button>
-        </form>
+        if not private_key or not client_email:
+            print("⚠️ Google credentials not found")
+            return None
         
-        <div id="status" class="status"></div>
+        if '\\n' in private_key:
+            private_key = private_key.replace('\\n', '\n')
         
-        <div class="footer">
-            © 2026 QR-ОбучAI<br>Для регистрации в учебном центре
-        </div>
-    </div>
-
-    <script>
-        let userLatitude = null;
-        let userLongitude = null;
-
-        function getLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        userLatitude = position.coords.latitude;
-                        userLongitude = position.coords.longitude;
-                        console.log('📍 Геолокация:', userLatitude, userLongitude);
-                    },
-                    (error) => console.warn('⚠️ Геолокация недоступна:', error.message),
-                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-                );
-            }
+        credentials_info = {
+            "type": "service_account",
+            "project_id": "qr-obuchai",
+            "private_key_id": "key123",
+            "private_key": private_key,
+            "client_email": client_email,
+            "client_id": "123456",
+            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+            "token_uri": "https://oauth2.googleapis.com/token",
         }
+        
+        credentials = service_account.Credentials.from_service_account_info(
+            credentials_info, scopes=["https://www.googleapis.com/auth/spreadsheets"]
+        )
+        
+        service = build('sheets', 'v4', credentials=credentials)
+        print("✅ Google Sheets client created")
+        return service
+    except Exception as e:
+        print(f"❌ Error creating Sheets client: {str(e)}")
+        return None
 
-        async function loadKicList() {
-            const select = document.getElementById('kic');
-            try {
-                const response = await fetch('/api/kic-list');
-                if (response.ok) {
-                    const data = await response.json();
-                    select.innerHTML = '<option value="">Выберите город из списка</option>';
-                    data.cities.forEach(city => {
-                        const option = document.createElement('option');
-                        option.value = city;
-                        option.textContent = city;
-                        select.appendChild(option);
-                    });
-                    return;
-                }
-            } catch (e) { console.warn('⚠️ API недоступен, используем список по умолчанию'); }
-            
-            const defaultCities = ['Екатеринбург','Нижний Тагил','Асбест','Первоуральск','Каменск-Уральский','Ирбит','Серов','Камышлов'];
-            select.innerHTML = '<option value="">Выберите город из списка</option>';
-            defaultCities.forEach(city => {
-                const option = document.createElement('option');
-                option.value = city; option.textContent = city; select.appendChild(option);
-            });
+@app.get("/")
+async def root():
+    return {"message": "QR-ОбучAI API работает!", "status": "ok"}
+
+@app.get("/api/health")
+async def health_check():
+    return {"status": "ok", "timestamp": get_yekaterinburg_time().strftime("%d.%m.%Y %H:%M:%S")}
+
+@app.get("/api/kic-list")
+async def get_kics():
+    return {"cities": DEFAULT_KIC_LIST}
+
+@app.post("/api/register")
+async def register_visit(data: RegistrationData, background_tasks: BackgroundTasks):
+    """Регистрация с записью в Google Sheets"""
+    print(f"📝 Получены данные: {data}")
+    
+    try:
+        timestamp = get_yekaterinburg_time().strftime("%d.%m.%Y %H:%M:%S")
+        
+        # Геокодинг
+        address = "Адрес не определён"
+        if data.latitude is not None and data.longitude is not None:
+            address = f"шир. {data.latitude:.5f} • долг. {data.longitude:.5f}"
+        else:
+            address = "Координаты не получены"
+        
+        print(f"📝 Registration: {data.fio}, {data.kic}, {data.purpose}")
+        
+        # Запись в Google Sheets
+        sheets_service = get_sheets_service()
+        sheet_id = os.environ.get("GOOGLE_SHEET_ID_REGISTRATIONS", "1BUjdLdJJeGHxnY1ZQ-XD0wbX0HlcZUCffIGF2gG56No")
+        
+        if sheets_service:
+            try:
+                values = [
+                    timestamp,
+                    data.fio,
+                    data.kic,
+                    data.purpose,
+                    address,
+                    ""
+                ]
+                
+                body = {'values': [values]}
+                result = sheets_service.spreadsheets().values().append(
+                    spreadsheetId=sheet_id,
+                    range="Регистрации!A:F",
+                    valueInputOption='RAW',
+                    body=body
+                ).execute()
+                
+                print(f"✅ Appended {result.get('updates').get('updatedCells')} cells to Google Sheets")
+            except Exception as e:
+                print(f"❌ Error writing to Google Sheets: {str(e)}")
+        else:
+            print("⚠️ Google Sheets service not available")
+        
+        return {
+            "status": "success",
+            "address": address,
+            "timestamp": timestamp,
+            "fio": data.fio,
+            "purpose": data.purpose,
+            "message": "Регистрация успешна"
         }
+    except Exception as e:
+        print(f"❌ Unexpected error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Внутренняя ошибка: {str(e)}")
 
-        async function submitForm(event) {
-            event.preventDefault();
-            
-            const fio = document.getElementById('fio').value.trim();
-            const kic = document.getElementById('kic').value;
-            const purpose = document.getElementById('purpose').value;
-            const statusDiv = document.getElementById('status');
-            const submitBtn = document.getElementById('submitBtn');
-            
-            if (!fio || !kic || !purpose) {
-                statusDiv.className = 'status error';
-                statusDiv.textContent = '❌ Заполните все обязательные поля';
-                statusDiv.style.display = 'block';
-                return;
-            }
-            
-            submitBtn.disabled = true;
-            submitBtn.textContent = '⏳ Регистрация...';
-            
-            try {
-                const response = await fetch('/api/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ fio, kic, purpose, latitude: userLatitude, longitude: userLongitude })
-                });
-                
-                // 🔍 Проверяем тип ответа
-                const contentType = response.headers.get('content-type');
-                let result;
-                
-                if (contentType && contentType.includes('application/json')) {
-                    result = await response.json();
-                } else {
-                    // Сервер вернул не-JSON (например, ошибку 500 с HTML)
-                    const text = await response.text();
-                    console.error('Server returned non-JSON:', text.substring(0, 200));
-                    throw new Error('Сервер вернул ошибку. Проверьте логи Vercel.');
-                }
-                
-                if (response.ok && result && result.status === 'success') {
-                    statusDiv.className = 'status success';
-                    statusDiv.innerHTML = `✅ <b>Регистрация успешна!</b><br>📍 Адрес: ${result.address || 'Н/Д'}<br>⏰ Время: ${result.timestamp || 'Н/Д'}`;
-                    document.getElementById('registrationForm').reset();
-                } else {
-                    const errorMsg = result?.detail || result?.message || (typeof result === 'string' ? result : 'Ошибка регистрации');
-                    throw new Error(errorMsg);
-                }
-            } catch (error) {
-                console.error('Registration error:', error);
-                statusDiv.className = 'status error';
-                statusDiv.textContent = `❌ ${error.message || 'Неизвестная ошибка'}`;
-            } finally {
-                statusDiv.style.display = 'block';
-                submitBtn.disabled = false;
-                submitBtn.textContent = '📝 Зарегистрироваться';
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            getLocation();
-            loadKicList();
-            document.getElementById('registrationForm').addEventListener('submit', submitForm);
-        });
-    </script>
-</body>
-</html>
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
