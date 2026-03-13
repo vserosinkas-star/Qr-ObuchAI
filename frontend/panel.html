@@ -94,15 +94,53 @@
             filter: drop-shadow(0 4px 6px rgba(0,160,255,0.3));
         }
 
+        /* Контейнер для подзаголовка и кнопки */
+        .title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-left: 68px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
         .subhead {
             font-size: 1rem;
             color: #a0b5d0;
-            margin-bottom: 40px;
             border-left: 4px solid #2a7fff;
             padding-left: 16px;
             background: linear-gradient(90deg, rgba(42,127,255,0.1), transparent);
             line-height: 1.5;
-            margin-left: 68px;
+            flex: 1 1 auto;
+        }
+
+        /* Кнопка "Сводная таблица" — ярко-синяя */
+        .summary-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #2a7fff;               /* сплошной синий */
+            border: 1px solid #2a7fff;
+            border-radius: 40px;
+            padding: 12px 30px;
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 1.1rem;
+            text-decoration: none;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255,255,255,0.2) inset;
+            letter-spacing: -0.3px;
+            white-space: nowrap;
+        }
+
+        .summary-btn:hover {
+            background: #1a5bbf;               /* чуть темнее при наведении */
+            border-color: #1a5bbf;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(42, 127, 255, 0.5);
         }
 
         .grid {
@@ -277,6 +315,7 @@
             box-shadow: 0 8px 20px rgba(42,127,255,0.4);
         }
 
+        /* Адаптация для мобильных */
         @media (max-width: 600px) {
             .container { padding: 25px 15px; }
             h1 { font-size: 1.9rem; }
@@ -284,25 +323,46 @@
             .modal-content { padding: 25px 15px; }
             .modal-btn { font-size: 1rem; padding: 14px 15px; }
             .header { flex-wrap: wrap; }
-            .subhead { margin-left: 0; }
+            .title-row {
+                margin-left: 0;
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .subhead {
+                margin-bottom: 10px;
+            }
+            .summary-btn {
+                white-space: normal;
+                justify-content: center;
+                padding: 14px 20px;
+                font-size: 1rem;
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <!-- Иконка приложения Qr-ОбучAI -->
             <div class="app-icon">
                 <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%2300d4ff;stop-opacity:1' /%3E%3Cstop offset='50%25' style='stop-color:%2300ff88;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23aaff00;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='45' fill='url(%23grad)'/%3E%3Cpath d='M 30 50 L 45 65 L 70 35' stroke='white' stroke-width='8' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E" alt="Qr-ОбучAI">
             </div>
             <h1>Qr-ОбучAI</h1>
         </div>
-        <div class="subhead">
-            <i class="fas fa-robot" style="margin-right: 8px;"></i> Панель управления таблицами — быстрый доступ ко всем ГОСБ
+
+        <div class="title-row">
+            <div class="subhead">
+                <i class="fas fa-robot" style="margin-right: 8px;"></i> Панель управления таблицами — быстрый доступ ко всем ГОСБ
+            </div>
+            <a href="https://script.google.com/macros/s/AKfycbyOl8A-2oLUA4clcS7vsNYag4Dp4i_NeCwyDm1Z7WE3dVsj4FUn_tOVbIGiC6vluI1h/exec" 
+               class="summary-btn" 
+               target="_blank">
+               <i class="fas fa-table"></i> Сводная таблица
+            </a>
         </div>
 
         <div class="grid" id="cardGrid">
-            <!-- Карточка 1: Аппарат Банка (модальное окно) -->
+            <!-- Карточка 1: Аппарат Банка -->
             <div class="card js-apparat" id="apparat-card">
                 <div class="card-icon"><i class="fas fa-university"></i></div>
                 <div class="card-content">
@@ -310,8 +370,7 @@
                     <div class="card-meta"><i class="fas fa-database"></i> Екатеринбург</div>
                 </div>
             </div>
-
-            <!-- Карточка 2: Тюменский ГОСБ (модальное окно) -->
+            <!-- Карточка 2: Тюменский ГОСБ -->
             <div class="card js-tyumen" id="tyumen-card">
                 <div class="card-icon"><i class="fas fa-city"></i></div>
                 <div class="card-content">
@@ -319,8 +378,7 @@
                     <div class="card-meta"><i class="fas fa-map-pin"></i> Тюмень</div>
                 </div>
             </div>
-
-            <!-- Карточка 3: Челябинский ГОСБ (модальное окно) -->
+            <!-- Карточка 3: Челябинский ГОСБ -->
             <div class="card js-chelyabinsk" id="chelyabinsk-card">
                 <div class="card-icon"><i class="fas fa-industry"></i></div>
                 <div class="card-content">
@@ -328,8 +386,7 @@
                     <div class="card-meta"><i class="fas fa-map-pin"></i> Челябинск</div>
                 </div>
             </div>
-
-            <!-- Карточка 4: Югорский ГОСБ (модальное окно) -->
+            <!-- Карточка 4: Югорский ГОСБ -->
             <div class="card js-ugra" id="ugra-card">
                 <div class="card-icon"><i class="fas fa-mountain"></i></div>
                 <div class="card-content">
@@ -337,8 +394,7 @@
                     <div class="card-meta"><i class="fas fa-map-pin"></i> Ханты-Мансийск</div>
                 </div>
             </div>
-
-            <!-- Карточка 5: Башкирский ГОСБ (модальное окно) -->
+            <!-- Карточка 5: Башкирский ГОСБ -->
             <div class="card js-ufa" id="ufa-card">
                 <div class="card-icon"><i class="fas fa-tree"></i></div>
                 <div class="card-content">
@@ -346,8 +402,7 @@
                     <div class="card-meta"><i class="fas fa-map-pin"></i> Уфа</div>
                 </div>
             </div>
-
-            <!-- Карточка 6: Курганский ГОСБ (модальное окно) -->
+            <!-- Карточка 6: Курганский ГОСБ -->
             <div class="card js-kurgan" id="kurgan-card">
                 <div class="card-icon"><i class="fas fa-water"></i></div>
                 <div class="card-content">
@@ -364,11 +419,7 @@
         </div>
     </div>
 
-    <!-- ============================================ -->
-    <!-- МОДАЛЬНЫЕ ОКНА ДЛЯ ВСЕХ ГОСБ                 -->
-    <!-- ============================================ -->
-
-    <!-- Модальное окно для Аппарата Банка -->
+    <!-- Модальные окна -->
     <div id="apparatModal" class="modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
@@ -381,8 +432,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Модальное окно для Тюменского ГОСБ -->
     <div id="tyumenModal" class="modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
@@ -391,12 +440,10 @@
             <div class="modal-buttons">
                 <a href="https://docs.google.com/spreadsheets/d/1pF14w-l3Ij4_C4yS7WjaC52c2BiZwz4o6uOKsNcwZco/edit?gid=1928250672#gid=1928250672" target="_blank" class="modal-btn">📋 Основная с местоположением</a>
                 <a href="https://docs.google.com/spreadsheets/d/1rRLKl_7AF13oTkNl0zjdBMR4KlnsggjmxwPunx3hzuM/edit?gid=1207426309#gid=1207426309" target="_blank" class="modal-btn">📊 Отчет в УЦ</a>
-                <a href="tyumen.html" target="_blank" class="modal-btn">🌐 Форма регистрации</a>
+                <a href="https://script.google.com/macros/s/AKfycbx5g_LmbhEtjjG4n529KzTGwA8YDOTG_QYYnvwk6gqEst5K8OXZQeajQvvpvrWIIBEk/exec" target="_blank" class="modal-btn">🌐 Форма регистрации</a>
             </div>
         </div>
     </div>
-
-    <!-- Модальное окно для Челябинского ГОСБ -->
     <div id="chelyabinskModal" class="modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
@@ -409,8 +456,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Модальное окно для Югорского ГОСБ -->
     <div id="ugraModal" class="modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
@@ -423,8 +468,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Модальное окно для Башкирского ГОСБ -->
     <div id="ufaModal" class="modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
@@ -437,8 +480,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Модальное окно для Курганского ГОСБ -->
     <div id="kurganModal" class="modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
@@ -452,24 +493,16 @@
         </div>
     </div>
 
-    <!-- ============================================ -->
-    <!-- JAVASCRIPT                                   -->
-    <!-- ============================================ -->
     <script>
         (function() {
             'use strict';
-
             const grid = document.getElementById('cardGrid');
-
-            // ✅ Универсальное закрытие по крестику для ЛЮБОГО модального окна
             document.querySelectorAll('.close-modal').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const modal = this.closest('.modal');
                     if (modal) modal.style.display = 'none';
                 });
             });
-
-            // ✅ Универсальное закрытие по клику вне модального окна
             window.addEventListener('click', function(event) {
                 document.querySelectorAll('.modal').forEach(modal => {
                     if (event.target === modal) {
@@ -477,53 +510,35 @@
                     }
                 });
             });
-
-            // ✅ Делегирование кликов по карточкам
             if (grid) {
                 grid.addEventListener('click', function(event) {
                     const card = event.target.closest('.card');
                     if (!card) return;
-
-                    // Аппарат Банка → модальное окно
                     if (card.classList.contains('js-apparat') || card.id === 'apparat-card') {
                         event.preventDefault();
                         document.getElementById('apparatModal').style.display = 'flex';
-                    }
-                    // Тюменский ГОСБ → модальное окно
-                    else if (card.classList.contains('js-tyumen') || card.id === 'tyumen-card') {
+                    } else if (card.classList.contains('js-tyumen') || card.id === 'tyumen-card') {
                         event.preventDefault();
                         document.getElementById('tyumenModal').style.display = 'flex';
-                    }
-                    // Челябинский ГОСБ → модальное окно
-                    else if (card.classList.contains('js-chelyabinsk') || card.id === 'chelyabinsk-card') {
+                    } else if (card.classList.contains('js-chelyabinsk') || card.id === 'chelyabinsk-card') {
                         event.preventDefault();
                         document.getElementById('chelyabinskModal').style.display = 'flex';
-                    }
-                    // Югорский ГОСБ → модальное окно
-                    else if (card.classList.contains('js-ugra') || card.id === 'ugra-card') {
+                    } else if (card.classList.contains('js-ugra') || card.id === 'ugra-card') {
                         event.preventDefault();
                         document.getElementById('ugraModal').style.display = 'flex';
-                    }
-                    // Башкирский ГОСБ → модальное окно
-                    else if (card.classList.contains('js-ufa') || card.id === 'ufa-card') {
+                    } else if (card.classList.contains('js-ufa') || card.id === 'ufa-card') {
                         event.preventDefault();
                         document.getElementById('ufaModal').style.display = 'flex';
-                    }
-                    // Курганский ГОСБ → модальное окно
-                    else if (card.classList.contains('js-kurgan') || card.id === 'kurgan-card') {
+                    } else if (card.classList.contains('js-kurgan') || card.id === 'kurgan-card') {
                         event.preventDefault();
                         document.getElementById('kurganModal').style.display = 'flex';
                     }
                 });
-
-                // ✅ Обработка touchstart для мобильных
                 grid.addEventListener('touchstart', function(event) {
                     const card = event.target.closest('.card');
                     if (!card) return;
-                    
                     const modalCards = ['js-apparat', 'js-tyumen', 'js-chelyabinsk', 'js-ugra', 'js-ufa', 'js-kurgan',
                                         'apparat-card', 'tyumen-card', 'chelyabinsk-card', 'ugra-card', 'ufa-card', 'kurgan-card'];
-                    
                     if (modalCards.some(cls => card.classList.contains(cls) || card.id === cls)) {
                         event.preventDefault();
                     }
