@@ -202,11 +202,8 @@
                 
                 if (response.ok && result.status === 'success') {
                     statusDiv.className = 'status success';
-                    statusDiv.innerHTML = `
-                        ✅ <b>Регистрация успешна!</b><br>
-                        📍 Адрес: ${result.address}<br>
-                        ⏰ Время: ${result.timestamp}
-                    `;
+                    // Исправлено: теперь только простое сообщение об успехе
+                    statusDiv.innerHTML = `✅ <b>Регистрация успешна</b>`;
                     document.getElementById('registrationForm').reset();
                 } else {
                     throw new Error(result.detail || result.message || 'Ошибка регистрации');
